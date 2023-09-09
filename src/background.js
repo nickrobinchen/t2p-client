@@ -5,15 +5,13 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const ipcMain = require('electron').ipcMain;
-const { remote } = require('electron');
-
-remote.exports.showMessageBox = function(title, message) {
-  var spawn = myChildProccess.spawn("C:\\Windows\\System32\\notepad.exe");
-};
 // 打开一个子进程
 const myChildProccess = require('child_process');
 var mySpawn = [];
 // 收到消息, 打开进程
+async function handleGenerateRequest(){
+
+}
 ipcMain.on('open-child-now', (e, msg) => {
   console.log('打开进程-->mainProcessGet:' + msg)
   var spawn = myChildProccess.spawn("C:\\Windows\\System32\\notepad.exe");// C:/Users/nickt/Desktop/1.py");//'C:\\Program Files\\Notepad++\\notepad++.exe'
@@ -39,7 +37,7 @@ async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 640,
     webPreferences: {
       
       // Use pluginOptions.nodeIntegration, leave this alone
