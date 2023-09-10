@@ -11,10 +11,10 @@
             </el-select>
           </el-col>
           <el-col :span="15">
-            <el-input placeholder="请输入文本" v-model="input3" class="input-with-select">
+            <el-input placeholder="请输入文本" v-model="input_text" class="input-with-select">
             </el-input>
           </el-col>
-          <el-col :span="4"><el-button type="primary" @click="startClick">开始捏脸</el-button>
+          <el-col :span="4"><el-button type="primary" @click="start">开始捏脸</el-button>
           </el-col>
         </el-row>
         <el-row id="iter">迭代次数：<el-input-number v-model="num" @change="handleChange" :min="1" :max="200"
@@ -27,17 +27,11 @@
                 <el-image style="width:85%; " id="result_img" :src="url" :fit="fill"></el-image>
               </div>
             </el-card>
-          </el-col><!--el-col :span="12">
-            <h3>生成图片指标</h3>
-            <p>CLIP score: 30</p>
-            <p>R-precision: </p>
-            <p>生成时间: 2s</p>
-          </el-col-->
+          </el-col>
           <el-col :span="11">
             <el-card shadow="hover" style="width: 100%;">
               <div style="width: 100%; display: inline-block; ">
-                <el-statistic group-separator="," :precision="2" decimal-separator="." :value="value1"
-                  title="CLIP Score"><!--el-statistic :value="deadline2" time-indices title="CLIP Score"-->
+                <el-statistic group-separator="," :precision="2" decimal-separator="." :value="value1" title="CLIP Score">
                 </el-statistic>
               </div>
             </el-card>
@@ -52,12 +46,6 @@
                 </el-statistic>
               </div>
             </el-card>
-            <!--el-card shadow="hover" style="width: 100%;margin-top: 20px; ">
-              <div style="width: 100%; display: inline-block;">
-                <el-statistic format="DD天HH小时mm分钟" :value="deadline5" time-indices title="🚩距离立夏还有：">
-                </el-statistic>
-              </div>
-            </el-card-->
           </el-col></el-row>
         <!--div>
           <el-row :gutter="20">
@@ -137,13 +125,14 @@ export default {
       gen_time: 3.24,
       num: '50',
       value1: 27.855,
-      input3: '',
+      input_text: '',
       r_pre: 0.5,
       url: require('./assets/test.png')
     }
   },
   methods: {
-    startClick() {
+    start() {
+      ipcRenderer.send(this.input_text)
       var x = 1
       if (1 == x) {
         ipcRenderer.send('open-child-now');
