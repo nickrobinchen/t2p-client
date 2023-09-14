@@ -4,9 +4,9 @@
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="文本捏脸" name="main">
         <el-row :gutter="10"> <!--el-col :span="3" class="label_pre">选择模型：</el-col-->
-          <el-col :span="8"><el-radio-group v-model="lang">
+          <el-col :span="6"><el-radio-group v-model="lang">
               <el-radio-button label="en">英文CLIP</el-radio-button>
-              <el-radio-button label="cn" disabled>中文CLIP</el-radio-button>
+              <el-radio-button label="cn">中文CLIP</el-radio-button>
             </el-radio-group></el-col>
           <el-col :span="8"><el-radio-group v-model="gender">
               <el-radio-button label="female">女性</el-radio-button>
@@ -34,7 +34,7 @@
             active-color="#13ce66" inactive-color="#ff4949">
           </el-switch></el-row>
         <el-divider></el-divider>
-        <h2>捏脸结果<span v-if="generated">:{{ this.input_text }}</span></h2>
+        <h2>捏脸结果<span v-if="generated">:{{ this.last_input }}</span></h2>
         <el-row :gutter="0" v-loading="loading"><el-col :span="12"><el-card shadow="hover" style="width: 90%;">
               <div style="width: 100%; display: inline-block; text-align: center;">
                 <el-image style="width:85%; " id="result_img" :src="url"></el-image>
@@ -42,10 +42,9 @@
             </el-card>
           </el-col>
           <el-col :span="11">
-            <el-card shadow="hover" style="width: 100%;">
+            <el-card shadow="hover" style="width: 100%;margin-top: 20px; ">
               <div style="width: 100%; display: inline-block; ">
-                <el-statistic group-separator="," :precision="2" decimal-separator="." :value="clip_score"
-                  title="CLIP Score">
+                <el-statistic :value="last_iter" title="迭代次数">
                 </el-statistic>
               </div>
             </el-card>
@@ -54,12 +53,19 @@
                 <el-statistic :value="gen_time" :precision="2" title="生成用时(s)">
                 </el-statistic>
               </div>
-            </el-card><el-card shadow="hover" style="width: 100%;margin-top: 20px; ">
+            </el-card>
+            <el-card shadow="hover" style="width: 100%;margin-top: 20px; ">
+              <div style="width: 100%; display: inline-block; ">
+                <el-statistic group-separator="," :precision="2" decimal-separator="." :value="clip_score"
+                  title="CLIP Score">
+                </el-statistic>
+              </div>
+            </el-card><!--el-card shadow="hover" style="width: 100%;margin-top: 20px; ">
               <div style="width: 100%; display: inline-block; ">
                 <el-statistic :value="r_pre" title="R-Precision">
                 </el-statistic>
               </div>
-            </el-card>
+            </el-card-->
           </el-col></el-row>
       </el-tab-pane>
       <el-tab-pane label="结果对比" name="second">
@@ -136,6 +142,7 @@ export default {
       gen_time: 3.24,
       iter_num: 50,
       clip_score: 27.855,
+      last_iter: 10,
       lang: 'en',
       // t2p_img_path: require('../comp/T2P/01.A woman with large bright eyes and long eyelashes..png'),
       // nsh_img_path: require('../comp/NSH/01.png'),
@@ -152,6 +159,7 @@ export default {
       loading: false,
       options: [],
       comp_selected: '',
+      last_input: '',
       url: require('./assets/test.png')
     }
   },
@@ -166,7 +174,7 @@ export default {
   methods: {
     inputClick() {
       this.loading = true;
-      ipcRenderer.send('text-input', [this.input_text, this.iter_num, this.use_engine]);
+      ipcRenderer.send('text-input', { text: this.input_text, iter: this.iter_num, engine: this.use_engine, lang: this.lang });
       this.timer = setInterval(this.checkResult, 1000);
     },
     handleClick() {
@@ -184,6 +192,8 @@ export default {
         msg_rcvd = false;
         this.loading = false
         clearInterval(this.timer);
+        this.last_input = this.input_text;
+        this.last_iter = this.iter_num;
       }
     },
     compChange(value) {

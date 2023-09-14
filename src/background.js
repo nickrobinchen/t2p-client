@@ -12,22 +12,20 @@ const ipcMain = require('electron').ipcMain;
 const path = require("path")
 
 var mySpawn = [];
-function handleTextInput(e, msg) {
-  console.log(msg);
-  var use_engine = msg[2]
+function handleTextInput(e, args) {
   const configPath = process.env.NODE_ENV === 'development' ? path.join(__dirname, '../src/assets/config.yaml') : path.join(process.cwd(), 'config.yaml');
   const configFile = fs.readFileSync(configPath, 'utf-8');
   const config = YAML.parse(configFile);
-  const execStr = `${config['python_path']} ${config['t2p_path']}/main.py --text "${msg[0]}" --iterations ${msg[1]} --use_engine ${use_engine}`
+  const execStr = `${config['python_path']} ${config['t2p_path']}/main.py --text "${args.text}" --iterations ${args.iter} --use_engine ${args.engine} --lang ${args.lang}`
   console.log(execStr)
   ChildProcess.exec(execStr, {
     cwd: config['t2p_path']
   }, (error, stdout, stderr) => {
+    console.log(stdout);
     try {
       var result = JSON.parse(stdout);
       if (result != null) {
-        console.log(result);
-        if (use_engine && 'engine_img_path' in result) {
+        if (args.engine && 'engine_img_path' in result) {
           ChildProcess.exec(result['engine_img_path'])
         }
         e.sender.send('generated-reply', JSON.stringify(result));
@@ -39,15 +37,6 @@ function handleTextInput(e, msg) {
 }
 
 ipcMain.on('text-input', handleTextInput);
-//   console.log('关闭进程-->mainProcessGet:' + msg)
-//   e.sender.send('cs-reply', '正在关闭所有打开的应用')
-//   // 收到消息, 关闭所有进程
-//   for (var i = 0; i < mySpawn.length; i++) {
-//     mySpawn[i].kill();
-//   }
-//   mySpawn = [];
-// });
-// Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
@@ -56,7 +45,7 @@ async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 1000,
-    height: 800,
+    height: 920,
     webPreferences: {
       webSecurity: false,
       //preload: path.join(__dirname, '/src/preload.js'),
