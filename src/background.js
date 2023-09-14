@@ -14,19 +14,23 @@ const path = require("path")
 var mySpawn = [];
 function handleTextInput(e, msg) {
   console.log(msg);
+  var use_engine = msg[2]
   const configPath = process.env.NODE_ENV === 'development' ? path.join(__dirname, '../src/assets/config.yaml') : path.join(process.cwd(), 'config.yaml');
   const configFile = fs.readFileSync(configPath, 'utf-8');
   const config = YAML.parse(configFile);
-  const execStr = `${config['python_path']} ${config['t2p_path']}/main.py --text "${msg[0]}" --iterations ${msg[1]}`
+  const execStr = `${config['python_path']} ${config['t2p_path']}/main.py --text "${msg[0]}" --iterations ${msg[1]} --use_engine ${use_engine}`
   console.log(execStr)
   ChildProcess.exec(execStr, {
     cwd: config['t2p_path']
   }, (error, stdout, stderr) => {
     try {
-      var obj = JSON.parse(stdout);
-      if (obj != null) {
-        console.log(obj);
-        e.sender.send('generated-reply', JSON.stringify(obj));
+      var result = JSON.parse(stdout);
+      if (result != null) {
+        console.log(result);
+        if (use_engine && 'engine_img_path' in result) {
+          ChildProcess.exec(result['engine_img_path'])
+        }
+        e.sender.send('generated-reply', JSON.stringify(result));
       }
     } catch (error) {
       console.log(error.toString())
@@ -51,8 +55,8 @@ protocol.registerSchemesAsPrivileged([
 async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
-    width: 800,
-    height: 720,
+    width: 1000,
+    height: 800,
     webPreferences: {
       webSecurity: false,
       //preload: path.join(__dirname, '/src/preload.js'),
