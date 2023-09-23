@@ -1,40 +1,102 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcRenderer } from 'electron'
 import fs from 'fs'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import ChildProcess from 'child_process'
 import YAML from 'yamljs'
+import net from 'net'
+import axios from 'axios'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const ipcMain = require('electron').ipcMain;
 //const yaml = require("yamljs")
 const path = require("path")
 
+// const configPath = process.env.NODE_ENV === 'development' ? path.join(__dirname, '../src/assets/config.yaml') : path.join(process.cwd(), 'config.yaml');
+// const configFile = fs.readFileSync(configPath, 'utf-8');
+// const config = YAML.parse(configFile);
+// ChildProcess.exec(`D:/Anaconda3/envs/PyTorch/python.exe D:/PythonProjects/T2P/app.py`, {
+//   cwd: 'D:/PythonProjects/T2P'//config['t2p_path']
+// }, (error, stdout, stderr) => {
+//   console.log(stdout);
+//   console.log(error);
+// })
+
+let engine_available = false;
+let engine_img_path = '';
+var ws, timer;
+var msg = null;
+var msg_received = false;
+var sender;
+function x(str) {
+  ChildProcess.execSync(str);
+}
+// setTimeout(() => {
+
+//   ws = new WebSocket('ws://localhost:8109');
+//   ws.onmessage = e => {
+//     try {
+//       if (e.data) {
+//         console.log(e.data)
+//         let data = JSON.parse(e.data);
+//         if ('engine_img_path' in data) {
+//           engine_available = true
+//           ChildProcess.exec('mspaint ' + data['engine_img_path'])
+//         }
+//         sender.send('generated-reply', e.data);
+//       }
+//     } catch (error) {
+//       console.log(error)
+//     }
+
+//   }
+// }, 5000)
+
 var mySpawn = [];
 function handleTextInput(e, args) {
-  const configPath = process.env.NODE_ENV === 'development' ? path.join(__dirname, '../src/assets/config.yaml') : path.join(process.cwd(), 'config.yaml');
-  const configFile = fs.readFileSync(configPath, 'utf-8');
-  const config = YAML.parse(configFile);
-  const execStr = `${config['python_path']} ${config['t2p_path']}/main.py --text "${args.text}" --iterations ${args.iter} --use_engine ${args.engine} --lang ${args.lang}`
-  console.log(execStr)
-  ChildProcess.exec(execStr, {
-    cwd: config['t2p_path']
-  }, (error, stdout, stderr) => {
-    console.log(stdout);
-    try {
-      var result = JSON.parse(stdout);
-      if (result != null) {
-        if (args.engine && 'engine_img_path' in result) {
-          ChildProcess.exec(result['engine_img_path'])
-        }
-        e.sender.send('generated-reply', JSON.stringify(result));
-      }
-    } catch (error) {
-      console.log(error.toString())
+  //ws.send(JSON.stringify())
+  axios.get('http://localhost:1016', { data: { text: args.text, iterations: args.iter, use_engine: args.engine, lang: args.lang } }).then((res) => {
+
+    console.log(res.data);
+    if (args.engine && 'engine_img_path' in res.data) {
+
+      setTimeout(() => {
+        ChildProcess.exec(res.data.engine_img_path)
+      }, 2000)
     }
+    // const str = res.data.engine_img_path.toString();
+    // console.log(str)
+    e.sender.send('generated-reply', JSON.stringify(res.data));
+  }).catch(error => {
+    console.log(error);
+
+    e.sender.send('generated-failed', JSON.stringify(error));
   })
+  //sender = e.sender;
 }
+
+// const configPath = process.env.NODE_ENV === 'development' ? path.join(__dirname, '../src/assets/config.yaml') : path.join(process.cwd(), 'config.yaml');
+// const configFile = fs.readFileSync(configPath, 'utf-8');
+// const config = YAML.parse(configFile);
+// const execStr = `${config['python_path']} ${config['t2p_path']}/main.py --text "${args.text}" --iterations ${args.iter} --use_engine ${args.engine} --lang ${args.lang}`
+// console.log(execStr)
+// ChildProcess.exec(execStr, {
+//   cwd: config['t2p_path']
+// }, (error, stdout, stderr) => {
+//   console.log(stdout);
+//   try {
+//     var result = JSON.parse(stdout);
+//     if (result != null) {
+//       if (args.engine && 'engine_img_path' in result) {
+//         ChildProcess.exec(result['engine_img_path'])
+//       }
+//       e.sender.send('generated-reply', JSON.stringify(result));
+//     }
+//   } catch (error) {
+//     console.log(error.toString())
+//   }
+// })
 
 ipcMain.on('text-input', handleTextInput);
 protocol.registerSchemesAsPrivileged([
@@ -45,7 +107,7 @@ async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
     width: 1000,
-    height: 920,
+    height: 930,
     webPreferences: {
       webSecurity: false,
       //preload: path.join(__dirname, '/src/preload.js'),
@@ -95,9 +157,10 @@ app.on('ready', async () => {
     }
   }
   ipcMain.handle('text-input', handleTextInput)
-  createWindow()
-})
 
+  createWindow()
+
+})
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
