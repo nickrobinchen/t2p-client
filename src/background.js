@@ -16,12 +16,6 @@ const path = require("path")
 // const configPath = process.env.NODE_ENV === 'development' ? path.join(__dirname, '../src/assets/config.yaml') : path.join(process.cwd(), 'config.yaml');
 // const configFile = fs.readFileSync(configPath, 'utf-8');
 // const config = YAML.parse(configFile);
-// ChildProcess.exec(`D:/Anaconda3/envs/PyTorch/python.exe D:/PythonProjects/T2P/app.py`, {
-//   cwd: 'D:/PythonProjects/T2P'//config['t2p_path']
-// }, (error, stdout, stderr) => {
-//   console.log(stdout);
-//   console.log(error);
-// })
 
 let engine_available = false;
 let engine_img_path = '';
@@ -54,9 +48,10 @@ function x(str) {
 // }, 5000)
 
 var mySpawn = [];
+
 function handleTextInput(e, args) {
   //ws.send(JSON.stringify())
-  axios.get('http://localhost:1016', { data: { text: args.text, iterations: args.iter, use_engine: args.engine, lang: args.lang } }).then((res) => {
+  axios.get('http://localhost:1016', { data: { text: args.text, iterations: args.iter, use_engine: args.engine, lang: args.lang, gender: args.gender } }).then((res) => {
 
     console.log(res.data);
     if (args.engine && 'engine_img_path' in res.data) {

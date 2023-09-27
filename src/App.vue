@@ -10,7 +10,7 @@
             </el-radio-group></el-col>
           <el-col :span="8"><el-radio-group v-model="gender">
               <el-radio-button label="female">女性</el-radio-button>
-              <el-radio-button label="male" disabled>男性</el-radio-button>
+              <el-radio-button label="male">男性</el-radio-button>
             </el-radio-group></el-col>
         </el-row>
         <el-row :gutter="10">
@@ -175,19 +175,19 @@ export default {
       generated: false,
       activeName: 'main',
       select: 'en',
-      gen_time: 3.24,
+      gen_time: 0.45,
       iter_num: 20,
-      clip_score: 27.855,
+      gender: 'female',
+      clip_score: 32,
       last_iter: 10,
       show_aes: false,
       lang: 'en',
       // t2p_img_path: require('../comp/T2P/01.A woman with large bright eyes and long eyelashes..png'),
-      // nsh_img_path: require('../comp/NSH/01.png'),
+      // nsh_img_path: require('../comp/NSH1/01.png'),
       comp_data: {
         t2p: { img_path: require('../comp/T2P1/定义明确的下巴和柔和的面部特征构成了她迷人的面容_engine.png'), clip_score: 30, aes: 6.3 },
         nsh: { img_path: require('../comp/NSH/01.png'), clip_score: 30, aes: 5.7 }
       },
-      gender: 'female',
       input_text: '',
       use_engine: false,
       r_pre: 0.5,
@@ -197,7 +197,7 @@ export default {
       options: [],
       comp_selected: '',
       last_input: '',
-      url: require('../comp/T2P/61.A baby face with big, cute and adorable eyes.png')
+      url: require('../src/assets/test.png')
     }
   },
   mounted() {
@@ -210,12 +210,13 @@ export default {
   methods: {
     inputClick() {
       this.loading = true;
-      ipcRenderer.send('text-input', { text: this.input_text, iter: this.iter_num, engine: this.use_engine, lang: this.lang });
+      ipcRenderer.send('text-input', { text: this.input_text, iter: this.iter_num, engine: this.use_engine, lang: this.lang, gender: this.gender });
       this.timer = setInterval(this.checkResult, 1000);
     },
     handleClick() {
 
     },
+
     handleChange() {
 
     },
@@ -259,20 +260,30 @@ export default {
       }
     },
     compChange(value) {
-      this.comp_data.t2p.clip_score = data['t2p'].find(item => {
+      value = parseInt(value) + 1
+      console.log(value)
+      const t2p_item = data['t2p'].find(item => {
         return item['index'] == value;
-      })['clip_score'];
+      });
+      const nsh_item = data['nsh'].find(item => {
+        return item['index'] == value;
+      });
+      if (t2p_item == undefined) {
+        console.log('t2p undef')
+      }
+      if (nsh_item == undefined) {
+        console.log('nsh undef')
+      }
+      this.comp_data.t2p.clip_score = t2p_item.clip_score;
 
-      this.comp_data.nsh.clip_score = data['nsh'].find(item => {
-        return item['index'] == value;
-      })['clip_score'];
-      this.comp_data.t2p.aes = data['t2p'].find(item => {
-        return item['index'] == value;
-      })['aes'];
+      this.comp_data.nsh.clip_score = nsh_item.clip_score;
+      // this.comp_data.t2p.aes = data['t2p'].find(item => {
+      //   return item['index'] == value;
+      // })['aes'];
 
-      this.comp_data.nsh.aes = data['nsh'].find(item => {
-        return item['index'] == value;
-      })['aes'];
+      // this.comp_data.nsh.aes = data['nsh'].find(item => {
+      //   return item['index'] == value;
+      // })['aes'];
       if (this.comp_data.nsh.clip_score > this.comp_data.t2p.clip_score) {
         this.nsh_bg = '#67C23A';
         this.t2p_bg = '#FFFFFF';
@@ -281,25 +292,20 @@ export default {
         this.t2p_bg = '#67C23A';
         this.nsh_bg = '#FFFFFF';
       }
-      if (this.comp_data.nsh.aes > this.comp_data.t2p.aes) {
-        this.nsh_aes_bg = '#67C23A';
-        this.t2p_aes_bg = '#FFFFFF';
-      }
-      else {
-        this.t2p_aes_bg = '#67C23A';
-        this.nsh_aes_bg = '#FFFFFF';
-      }
+      // if (this.comp_data.nsh.aes > this.comp_data.t2p.aes) {
+      //   this.nsh_aes_bg = '#67C23A';
+      //   this.t2p_aes_bg = '#FFFFFF';
+      // }
+      // else {
+      //   this.t2p_aes_bg = '#67C23A';
+      //   this.nsh_aes_bg = '#FFFFFF';
+      // }
+
+      this.comp_data.t2p.img_path = require(`../comp/T2P1/${t2p_item.text}_engine.png`)
       if (comp_data.英文[value].charAt(1) == '.') {
-        //this.comp_data.t2p.img_path = require('../comp/T2P/0' + comp_data.英文[value].charAt(0) + '.' + comp_data.英文[value].slice(3) + '.png')
-        this.comp_data.t2p.img_path = require(`../comp/T2P1/${this.comp_data.nsh.aes = data['nsh'].find(item => {
-          return item['index'] == value;
-        })['text']}_engine.png`)
         this.comp_data.nsh.img_path = require('../comp/NSH/0' + comp_data.中文[value].charAt(0) + '.png')
       }
       else {
-        this.comp_data.t2p.img_path = require(`../comp/T2P1/${this.comp_data.nsh.aes = data['nsh'].find(item => {
-          return item['index'] == value;
-        })['text']}_engine.png`)
         //this.comp_data.t2p.img_path = require('../comp/T2P/' + comp_data.英文[value].slice(0, 2) + '.' + comp_data.英文[value].slice(4) + '.png')
         this.comp_data.nsh.img_path = require('../comp/NSH/' + comp_data.中文[value].slice(0, 2) + '.png')
       }

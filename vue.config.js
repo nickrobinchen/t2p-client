@@ -4,7 +4,7 @@ module.exports = defineConfig({
   pluginOptions: {
     electronBuilder: {
       nodeIntegration: true,
-      customFileProtocol: "./"
+      //customFileProtocol: "./"
     }
 
   }, css: {
